@@ -31,14 +31,14 @@ void setup() {
   Serial.begin(115200);
   Serial2.begin(115200,SERIAL_8E1,2,2,false);
   M5.begin();
-  M5.Lcd.println("Start RobotControllerServer");
+  M5.Lcd.println("Start RobotControllerServer POI");
 
   // attempt to connect to Wifi network:
-  connect_WiFi();
+  //connect_WiFi();
 
-  UDP.begin(udp_port);   
+  //UDP.begin(udp_port);   
   // you're connected now, so print out the status:
-  printWifiStatus();
+  //printWifiStatus();
 }
 
 
@@ -53,27 +53,53 @@ void loop(){
   }
   */
 
+  M5.Lcd.println("Loop");
 
   // シリアル通信で命令列をロボットに送信
   Serial2.write(stop_motion_command,stop_motion_command[0]);
+  //M5.Lcd.println("Debug2");
   wait_command_ack();
-  if(!command_send_success) return;
+  //M5.Lcd.println("Debug3");
+  if(!command_send_success){
+    delay(5000);
+    return;
+  }
 
   Serial2.write(reset_program_counter_command,reset_program_counter_command[0]);
   wait_command_ack();
-  if(!command_send_success) return;
+  if(!command_send_success){
+    delay(5000);
+    return;
+  }
 
   Serial2.write(address_command,address_command[0]);
   wait_command_ack();
-  if(!command_send_success) return;
+  if(!command_send_success){
+    delay(5000);
+    return;
+  }
 
   Serial2.write(motion_restart_command,motion_restart_command[0]);
   wait_command_ack();
-  if(!command_send_success) return;
+  if(!command_send_success){
+    delay(5000);
+    return;
+  }
   
   //ロボットからのモーション完了を待つ
+  while(Serial2.available() == 0){}
+  uint8_t command_length = Serial2.read();
+  uint8_t command[20];
+  command[0] = command_length;
+  for(uint8_t i=1;i<command_length;i++){
+    command[i] = Serial2.read();
+  }
 
-  delay(500);
+  if(!(command[2] == 'P' && command[3] == 'O' && command[4] == 'I')){
+    // モーション完了でPOIが帰ってきてない
+  }
+
+  delay(5000);
 }
 
 
@@ -113,13 +139,21 @@ void connect_WiFi(){
   @return 返り値が成功ならばtrue,失敗ならばfalse
 */
 void wait_command_ack(){
+  //Serial.println("wait1");
+  //Serial.print("Serial2.available = " + Serial2.available());
+  Serial.println(Serial2.available());
   while(Serial2.available() == 0){}
+  //Serial.println("wait2");
 
   uint8_t command_length = Serial2.read();
   uint8_t commands[10];
   for(uint8_t i=1; i<command_length; i++){
     commands[i] = Serial2.read();
   }
+  //for(uint8_t i=0; i<command_length; i++){
+  //  Serial.print(commands[i]);
+  //  Serial.print(" ");
+  //}
 
   command_send_success = (commands[2] == 6);
 }
