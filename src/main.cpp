@@ -12,9 +12,11 @@ int udp_port = 3333;
 WiFiUDP UDP;
 
 char WiFibuff[128];
+bool command_send_success;  // コマンドのackが成功を示していればtrue,それ以外ならばfalse
 
 void printWifiStatus();
 void connect_WiFi();
+void wait_command_ack();
 
 void setup() {
   Serial.begin(115200);
@@ -39,17 +41,7 @@ void loop(){
     M5.Lcd.println("NO UDP");
   }
 
-  if(Serial.available() > 0){
-      // シリアルから取れるだけ入力をとる
-      String input_from_serial;
-      char c;
-      while((c = Serial.read())!=-1){
-        input_from_serial += c;
-      }
-      M5.Lcd.println(input_from_serial);
-  }else{
-    M5.Lcd.println("NO Serial");
-  }
+
   delay(500);
 }
 
@@ -83,4 +75,21 @@ void connect_WiFi(){
         M5.Lcd.println("WiFi connecting...");
     }
     M5.Lcd.println("WiFi Connected!");
+}
+
+/*
+  ロボットからのコマンドの返り値をwaitする
+  @return 返り値が成功ならばtrue,失敗ならばfalse
+*/
+void wait_command_ack(){
+  while(Serial.available() == 0){}
+
+  uint8_t command_length = Serial.read();
+  uint8_t commands[10];
+  for(uint8_t i=1; i<command_length; i++){
+    commands[i] = Serial.read();
+  }
+
+
+  command_send_success = (commands[2] == 6);
 }
