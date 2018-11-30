@@ -47,9 +47,17 @@ void loop(){
   */
 
   M5.Lcd.println("Loop");
-  motion_result r = send_motion(M_OJIGI);
-  log_d("motion result is %d", r);
+  cmd_result r = send_motion(M_OJIGI);
+  log_d("motion result ojigi is %d", r);
   
+  r = send_motion(M_PRE_WALK);
+  log_d("motion result pre walk is %d", r);
+
+  r = send_motion(M_WALK);
+  log_d("motion result walk is %d", r);
+
+  r = send_motion(M_POST_WALK);
+  log_d("motion result post walk is %d", r);
 
   delay(5000);
 }

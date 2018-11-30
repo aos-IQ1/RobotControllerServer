@@ -1,16 +1,26 @@
 
 #ifndef __MOTION_H__
 #define __MOTION_H__
+#include <stdint.h>
 
 typedef enum { 
-  M_OK, 
-  M_SUSPEND_FAILED, 
-  M_COUNTER_EEPROM_FAILED, 
-  M_CALL_FAILED,
-  M_RESTART_FAILED,
-} motion_result;
-typedef enum { M_OJIGI, } motions;
+  C_OK, 
+  C_SUSPEND_FAILED, 
+  C_COUNTER_EEPROM_FAILED, 
+  C_CALL_FAILED,
+  C_RESTART_FAILED,
+} cmd_result;
 
-motion_result send_motion(motions motion);
+typedef enum { 
+  M_OJIGI, 
+  M_HOME_POSITION,
+  M_PRE_WALK,
+  M_WALK,
+  M_POST_WALK
+} motions;
+
+cmd_result send_motion(motions motion);
+uint8_t checksum(uint8_t *cmd);
+cmd_result send_command (uint8_t *cmd, cmd_result ret_type, uint16_t timeout);
 
 #endif
