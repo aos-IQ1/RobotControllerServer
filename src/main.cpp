@@ -37,14 +37,14 @@ void setup() {
     log_e("fail to create semaphore : motion_sem");
     while(1);
   }
-  xSemaphoreGive(motion_sem);
+  xSemaphoreGive(motion_sem); // initialize to 'empty'
 
   switch_image_sem = xSemaphoreCreateBinary();
   if(switch_image_sem == NULL) {
     log_e("fail to create semaphore : switch_image_sem");
     while(1);
   }
-  xSemaphoreGive(switch_image_sem);
+  xSemaphoreGive(switch_image_sem); // initalize to 'empty'
 
   M5.Lcd.println("Start RobotControllerServer POI");
   log_d("Start RobotControllerServer POI");
@@ -115,10 +115,10 @@ void connect_WiFi(){
 }
 
 // function for task to send command
-// returns succsess or not
 void task_motion(void *pvParameters) {
   motions motion = *(motions*) pvParameters;
   if(xSemaphoreTake(motion_sem, 0) != pdTRUE) {
+    // other task is running
     log_d("request for motion is blocked : %d", motion);
   } else {
     log_d("request for motion is accepted : %d", motion);
@@ -133,14 +133,14 @@ void task_motion(void *pvParameters) {
 }
 
 // task function for task to switch facial image
-// returns succsess or not
 void task_switch_image(void *pvParameters) {
   images image = *(images*) pvParameters;
   if(xSemaphoreTake(switch_image_sem, 0) != pdTRUE) {
+    // other task is running
     log_d("request for switch image is blocked : %d", image);
   } else {
     log_d("request for switch image is accepted : %d", image);
-    // cmd_result r = send_motion(motion);
+    // TODO: switching image
     delay(10000); 
     xSemaphoreGive(switch_image_sem);
   }
