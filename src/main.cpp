@@ -1,15 +1,12 @@
 #include "config.h"
 #include "motion.h"
+#include "image.h"
 
 #include <stdint.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <M5Stack.h>
 #include <Arduino.h>
-
-typedef enum { 
-  I_SAMPLE
-} images;
 
 const char* ssid = AP_SSID; //  your network SSID (name)
 const char* password = AP_PASSWORD;    // your network password (use for WPA, or use as key for WEP)
@@ -46,6 +43,8 @@ void setup() {
   }
   xSemaphoreGive(switch_image_sem); // initalize to 'empty'
 
+  render_image(I_SAMPLE1);
+
   M5.Lcd.println("Start RobotControllerServer POI");
   log_d("Start RobotControllerServer POI");
 
@@ -76,7 +75,7 @@ void loop(){
     xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
   }
   if(M5.BtnC.wasPressed()){
-    images image = I_SAMPLE;
+    images image = I_SAMPLE2;
     xTaskCreate(task_switch_image, "task_switch_image", 4096, (void*)(&image), 1, NULL);
   }
   // end debug
@@ -117,7 +116,7 @@ void connect_WiFi(){
 // function for task to send command
 void task_motion(void *pvParameters) {
   motions motion = *(motions*) pvParameters;
-  if(xSemaphoreTake(motion_sem, 0) != pdTRUE) {
+  if(xSemaphoreTake(motion_sem, 0) != pdPASS) {
     // other task is running
     log_d("request for motion is blocked : %d", motion);
   } else {
@@ -135,13 +134,12 @@ void task_motion(void *pvParameters) {
 // task function for task to switch facial image
 void task_switch_image(void *pvParameters) {
   images image = *(images*) pvParameters;
-  if(xSemaphoreTake(switch_image_sem, 0) != pdTRUE) {
+  if(xSemaphoreTake(switch_image_sem, 0) != pdPASS) {
     // other task is running
     log_d("request for switch image is blocked : %d", image);
   } else {
     log_d("request for switch image is accepted : %d", image);
-    // TODO: switching image
-    delay(10000); 
+    render_image(image);
     xSemaphoreGive(switch_image_sem);
   }
   vTaskDelete(NULL);
