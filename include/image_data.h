@@ -3,10 +3,12 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// jpg data
 extern uint8_t sample1_jpg[];
 extern uint8_t sample2_jpg[];
 
-extern size_t sample1_jpg_len;
-extern size_t sample2_jpg_len;
+// size of data
+extern size_t sample1_jpg_len; 
+extern size_t sample2_jpg_len; 
 
 #endif

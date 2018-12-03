@@ -20,3 +20,9 @@ const char *AP_SSID     = "";
 const char *AP_PASSWORD = "";
 
 #endif
+----
+
+== 画像データについて
+現状画像データをリポジトリにあげるのを避けています。 +
+`include/image_data.h` にあるデータを適宜定義して利用してください。 +
+`xxd -i <画像ファイル>` でjpgをCの配列として吐けるようです。
