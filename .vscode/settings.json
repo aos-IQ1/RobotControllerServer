@@ -1,6 +1,0 @@
-{
-    "terminal.integrated.env.osx": {
-        "PATH": "/Users/yuudachi/.platformio/penv/bin:/Users/yuudachi/.platformio/penv:/Users/yuudachi/.opam/system/bin:/Users/yuudachi/.linuxbrew/bin:/Users/yuudachi/Library/Haskell/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Wireshark.app/Contents/MacOS:/Users/yuudachi/.cabal/bin:/Users/yuudachi/Library/Android/sdk/tools:/Users/yuudachi/Library/Android/sdk/platform-tools",
-        "PLATFORMIO_CALLER": "vscode"
-    }
-}
