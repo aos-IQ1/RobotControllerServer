@@ -142,6 +142,18 @@ cmd_result walk(bool (*finish)(void)) {
   }
 }
 
+cmd_result drive_joint(joints joint, uint8_t speed, uint16_t position) {
+  //               size  cmd   which servo to drive     
+  //               |     |     |                             speed (small => fast)
+  //               |     |     |                             |     position in [0x0000 0xFFFF]
+  //               V     v     v                             v     L     H     chksum
+  uint8_t cmd[] = {0x0B, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+  cmd[2+(joint-1)/8] += (1<< (joint-1)%8);
+  cmd[7] = speed;
+  cmd[8] = position & 0xFF;
+  cmd[9] = (position >> 8)& 0xFF;
+  return send_command(cmd, C_MULTI_SERVO_FAILED, 5000);
+}
 /*
               1 頭
   3:左肩ピッチ         4:右肩ピッチ
@@ -152,5 +164,5 @@ cmd_result walk(bool (*finish)(void)) {
   15:左腿ピッチ        16:右腿ピッチ
   17:左膝ピッチ        18:右膝ピッチ
 19:左足首ピッチ        20:右足首ピッチ
-21:左足首ロール        22:右足首ピッチ
+21:左足首ロール        22:右足首ロール
 */
