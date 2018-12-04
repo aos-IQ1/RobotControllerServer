@@ -34,6 +34,16 @@ void setup() {
   //printWifiStatus();
 }
 
+bool sample_finish() {
+  static uint8_t step = 0;
+  step++;
+  if (step == 2) {
+    step = 0;
+    return true;
+  } else {
+    return false;
+  }
+}
 
 void loop(){ 
   /*
@@ -50,21 +60,8 @@ void loop(){
   cmd_result r = send_motion(M_OJIGI);
   log_d("motion result ojigi is %d", r);
   
-  r = send_motion(M_PRE_WALK);
-  log_d("motion result pre walk is %d", r);
-
-  r = send_motion(M_WALKL);
-  log_d("motion result walkl is %d", r);
-  r = send_motion(M_WALKR);
-  log_d("motion result walkr is %d", r);
-
-  r = send_motion(M_WALKL);
-  log_d("motion result walkl is %d", r);
-  r = send_motion(M_WALKR);
-  log_d("motion result walkr is %d", r);
-
-  r = send_motion(M_POST_WALKR);
-  log_d("motion result post walkr is %d", r);
+  r = walk(sample_finish);
+  log_d("walk result is %d", r);
 
   delay(5000);
 }
