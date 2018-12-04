@@ -24,5 +24,6 @@ typedef enum {
 cmd_result send_motion(motions motion);
 uint8_t checksum(uint8_t *cmd);
 cmd_result send_command (uint8_t *cmd, cmd_result ret_type, uint16_t timeout);
+cmd_result walk(bool (*finish)(void));
 
 #endif

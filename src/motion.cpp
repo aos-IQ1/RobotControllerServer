@@ -44,11 +44,6 @@ cmd_result send_motion(motions motion) {
   }
 
   send_command(address_command, C_CALL_FAILED, 5000);
-  /*Serial2.write(address_command,address_command[0]);
-  if(!wait_command_ack()){
-    delay(5000);
-    return C_CALL_FAILED;
-  }*/
 
   Serial2.write(motion_restart_command,motion_restart_command[0]);
   if(!wait_command_ack()){
@@ -94,6 +89,7 @@ bool wait_command_ack(){
     command[i] = c;
   }
   Serial.printf("\n");
+  M5.Lcd.printf("\n");
 
   return (command[2] == 6);
 }
@@ -122,4 +118,36 @@ cmd_result send_command (uint8_t *cmd, cmd_result ret_type, uint16_t timeout) {
   }
 
   return C_OK;
+}
+
+/*
+ finish() != true の間歩行
+ a 片足が動くたびにfinish()が実行される。
+ @return cmd_result
+*/
+cmd_result walk(bool (*finish)(void)) {
+  
+  cmd_result r = send_motion(M_PRE_WALK);
+  log_d("motion result pre walk is %d", r);
+  if (r != C_OK) return r;
+
+  for (;;) {
+    r = send_motion(M_WALKL);
+    log_d("motion result walkl is %d", r);
+    if (r != C_OK) return r;
+    if (finish()) {
+      r = send_motion(M_POST_WALKL);
+      log_d("motion result post walkl is %d", r);
+      return r;
+    }
+
+    r = send_motion(M_WALKR);
+    log_d("motion result walkr is %d", r);
+    if (r != C_OK) return r;
+    if (finish()) {
+      r = send_motion(M_POST_WALKR);
+      log_d("motion result post walkr is %d", r);
+      return r;
+    }
+  }
 }
