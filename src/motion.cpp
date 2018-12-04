@@ -10,8 +10,10 @@ uint16_t motion_address_table[] = {
     0x0B80, // M001  お辞儀
     0x1380, // M002  ホームhポジション
     0x1B80, // M003  PreWalk
-    0x2380, // M004  Walk
-    0x2B80, // M005  PostWalk
+    0x2380, // M004  WalkL
+    0x2B80, // M005  WalkR
+    0x3380, // M005  PostWalkR
+    0x3B80, // M005  PostWalkL
 };
 
 // command templates

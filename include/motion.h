@@ -15,8 +15,10 @@ typedef enum {
   M_OJIGI, 
   M_HOME_POSITION,
   M_PRE_WALK,
-  M_WALK,
-  M_POST_WALK
+  M_WALKL,
+  M_WALKR,
+  M_POST_WALKR,
+  M_POST_WALKL,
 } motions;
 
 cmd_result send_motion(motions motion);
