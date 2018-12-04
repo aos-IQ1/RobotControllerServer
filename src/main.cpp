@@ -53,11 +53,18 @@ void loop(){
   r = send_motion(M_PRE_WALK);
   log_d("motion result pre walk is %d", r);
 
-  r = send_motion(M_WALK);
-  log_d("motion result walk is %d", r);
+  r = send_motion(M_WALKL);
+  log_d("motion result walkl is %d", r);
+  r = send_motion(M_WALKR);
+  log_d("motion result walkr is %d", r);
 
-  r = send_motion(M_POST_WALK);
-  log_d("motion result post walk is %d", r);
+  r = send_motion(M_WALKL);
+  log_d("motion result walkl is %d", r);
+  r = send_motion(M_WALKR);
+  log_d("motion result walkr is %d", r);
+
+  r = send_motion(M_POST_WALKR);
+  log_d("motion result post walkr is %d", r);
 
   delay(5000);
 }
