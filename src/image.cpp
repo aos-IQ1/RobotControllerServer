@@ -7,10 +7,8 @@
 #include <Arduino.h>
 
 void render_image(images image) {
-    uint8_t* data;
-    size_t len;
-    uint16_t x = 0;
-    uint16_t y = 0;
+    uint8_t* data = sample1_jpg;
+    size_t len = sample1_jpg_len;
     switch (image) {
         case I_SAMPLE1 :
             data = sample1_jpg;
@@ -21,5 +19,5 @@ void render_image(images image) {
             len = sample2_jpg_len;
             break;
     }
-    M5.Lcd.drawJpg(data, len, x, y);
+    M5.Lcd.drawJpg(data, len);
 }

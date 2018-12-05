@@ -75,12 +75,10 @@ bool wait_command_ack(){
   uint8_t command[command_length];
   for(uint8_t i=1; i<command_length; i++){
     uint8_t c = Serial2.read();
-    M5.Lcd.printf("%d ", c);
     Serial.printf("%x ", c);
     command[i] = c;
   }
   Serial.printf("\n");
-  M5.Lcd.printf("\n");
 
   return (command[2] == 6);
 }
