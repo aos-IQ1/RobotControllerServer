@@ -96,11 +96,15 @@ uint8_t checksum(uint8_t *cmd) {
 cmd_result send_command (uint8_t *cmd, cmd_result ret_type, uint16_t timeout) {
   uint8_t len = cmd[0];
   uint8_t chksum = checksum(cmd);
-  log_d("chksum is %x", chksum);
 
   if (chksum != cmd[len-1])
     cmd[len-1] = chksum;
   
+  log_d("send:");
+  for (uint8_t i = 0; i < len; i++) {
+    Serial.printf("%02X ", cmd[i]);
+  }
+  Serial.printf("\n");
   Serial2.write(cmd, len);
   if(!wait_command_ack()){
     delay(timeout);
@@ -156,13 +160,13 @@ cmd_result drive_joint(joints joint, uint8_t speed, uint16_t position) {
 }
 /*
               1 頭
-  3:左肩ピッチ         4:右肩ピッチ
-  5:左肩ロール         6:右肩ロール
-  9:左肘             10:右 肘
+  3:左肩ピッチ (F13000 - N7500 -  B2000)         4:右肩ピッチ (F2000 - N7500 -  B13000)
+  5:左肩ロール (D7500 - U13000)                  6:右肩ロール (D7500 - U2000)
+  9:左肘      (F4000 - N7500 -  B8300)          10:右 肘    (F11000 - N7500 -  B6600)
 
-  13:左腿ロール        14:右腿ロール
-  15:左腿ピッチ        16:右腿ピッチ
-  17:左膝ピッチ        18:右膝ピッチ
-19:左足首ピッチ        20:右足首ピッチ
-21:左足首ロール        22:右足首ロール
-*/
+  13:左腿ロール (D7500 - U8000)                 14:右腿ロール (D7500 - U6800)
+  15:左腿ピッチ (F11000 - N7500 - B4000)        16:右腿ピッチ (F4200 - N7500 - B11000)
+  17:左膝ピッチ (F6000 - N7500 - B11500)        18:右膝ピッチ (F9000 - N7500 - B3400)
+19:左足首ピッチ (F5000 - N7500 - B11000)        20:右足首ピッチ (F10000 - N7500 - B4000)
+21:左足首ロール (D10000 - N7500 - U7000)        22:右足首ロール (D5000 - N7500 - U8000)
+*///
