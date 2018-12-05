@@ -20,6 +20,17 @@ typedef enum {
   M_WALKR         = 0x2B80, // M005  WalkR
   M_POST_WALKR    = 0x3380, // M005  PostWalkR
   M_POST_WALKL    = 0x3B80, // M005  PostWalkL
+  M_TO_LEFT       = 0x3380, // M006  To left
+  M_TO_RIGHT      = 0x3B80, // M007  To right
+  M_TURN_LEFT     = 0x4380, // M008  Turn left
+  M_TURN_RIGHT    = 0x4B80, // M009  Turn right
+  M_GET_UP_U      = 0x5380, // M010  起き上がり うつぶせ
+  M_GET_UP_A      = 0x5B80, // M011  起き上がり 仰向け
+  M_PUNCHL        = 0x6380, // M012  横パンチ左
+  M_PUNCHR        = 0x6B80, // M013  横パンチ右
+  M_UTUBUSE       = 0x7380, // M014  うつ伏せ
+  M_AOMUKE        = 0x7B80, // M015  仰向け
+  M_WAVE_HAND     = 0x8380, // M016  手を振る
 } motions;
 
 typedef enum {
