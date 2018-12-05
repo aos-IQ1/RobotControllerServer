@@ -13,11 +13,8 @@
 
 #define CORE_DEBUG_LEVEL ARDUHAL_LOG_LEVEL_DEBUG
 
-const char *SSID      = "";
-const char *PASSWORD  = "";
-
-const char *AP_SSID     = "";
-const char *AP_PASSWORD = "";
+#define AP_SSID  "lab";
+#define AP_PASSWORD "lab";
 
 #endif
 ----

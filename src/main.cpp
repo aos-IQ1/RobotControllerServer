@@ -56,6 +56,16 @@ void setup() {
   //printWifiStatus();
 }
 
+bool sample_finish() {
+  static uint8_t step = 0;
+  step++;
+  if (step == 2) {
+    step = 0;
+    return true;
+  } else {
+    return false;
+  }
+}
 
 void loop(){ 
   /*
@@ -68,17 +78,43 @@ void loop(){
   }
   */
 
-  // begin debug
-  M5.update();
-  if(M5.BtnA.wasPressed()){
-    motions motion = M_OJIGI;
-    xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
+  M5.Lcd.println("Loop");
+  cmd_result r;
+
+if (Serial.available()) {
+    delay(10);
+    uint8_t len = Serial.available();
+    char line[len];
+    for (uint8_t i = 0; i < len; i++) line[i] = Serial.read();
+    uint8_t joint, speed;
+    uint16_t vol;
+    sscanf(line, "%d:%d:%d", &joint, &speed, &vol);
+    //uint16_t vol = analogRead(36)*0xFFFF/4095;
+    log_d("vol is %d", vol);
+    r = drive_joint((joints)joint, speed, vol);
+    log_d("drive joint%d result is %d", joint, r);
+  } else {
+
+    r = send_motion(M_OJIGI);
+    log_d("motion result ojigi is %d", r);
+    
+    r = walk(sample_finish);
+    log_d("walk result is %d", r);
+
+    
+    r = drive_joint(J_SHOULDER_L_ROLL, 5, 10000);
+    log_d("drive joint result is %d", r);
+    r = drive_joint(J_SHOULDER_L_PITCH, 5, 3000);
+    log_d("drive joint result is %d", r);
+    delay(500);
+    r = drive_joint(J_SHOULDER_L_ROLL, 5, 7500);
+    log_d("drive joint result is %d", r);
+    r = drive_joint(J_SHOULDER_L_PITCH, 5, 7500);
+    log_d("drive joint result is %d", r);
+
+    delay(3000);
   }
-  if(M5.BtnC.wasPressed()){
-    images image = I_SAMPLE2;
-    xTaskCreate(task_switch_image, "task_switch_image", 4096, (void*)(&image), 1, NULL);
-  }
-  // end debug
+
 }
 
 

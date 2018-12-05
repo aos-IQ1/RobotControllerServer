@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "config.h"
 #include "motion.h"
 #include <M5Stack.h>
 #include <Arduino.h>
@@ -6,26 +7,18 @@
 bool wait_command_ack();
 
 
-uint16_t motion_address_table[] = {
-    0x0B80, // M001  お辞儀
-    0x1380, // M002  ホームhポジション
-    0x1B80, // M003  PreWalk
-    0x2380, // M004  Walk
-    0x2B80, // M005  PostWalk
-};
-
 // command templates
-uint8_t stop_motion_command[] = {0x09,0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x0b};
+uint8_t stop_motion_command[]           = {0x09,0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x0b};
 uint8_t reset_program_counter_command[] = {0x11,0x00,0x02,0x02,0x00,0x00,0x4B,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x64};
-uint8_t address_command[] = {0x07,0x0C,0x80,0x0B,0x00,0x00,0x9E};
-uint8_t motion_restart_command[] = {0x09,0x00,0x02,0x00,0x00,0x00,0x03,0x00,0x0E};
+uint8_t address_command[]               = {0x07,0x0C,0x80,0x0B,0x00,0x00,0x9E};
+uint8_t motion_restart_command[]        = {0x09,0x00,0x02,0x00,0x00,0x00,0x03,0x00,0x0E};
 
 /*
   ロボットに-oモーションを送信
 */
 cmd_result send_motion(motions motion) {
 
-  uint16_t motion_address = motion_address_table[motion];
+  uint16_t motion_address = (uint16_t) motion;
   address_command[2] = motion_address & 0xFF;
   address_command[3] = (motion_address >> 8) & 0xFF;
 
@@ -42,11 +35,6 @@ cmd_result send_motion(motions motion) {
   }
 
   send_command(address_command, C_CALL_FAILED, 5000);
-  /*Serial2.write(address_command,address_command[0]);
-  if(!wait_command_ack()){
-    delay(5000);
-    return C_CALL_FAILED;
-  }*/
 
   Serial2.write(motion_restart_command,motion_restart_command[0]);
   if(!wait_command_ack()){
@@ -92,6 +80,7 @@ bool wait_command_ack(){
     command[i] = c;
   }
   Serial.printf("\n");
+  M5.Lcd.printf("\n");
 
   return (command[2] == 6);
 }
@@ -108,11 +97,15 @@ uint8_t checksum(uint8_t *cmd) {
 cmd_result send_command (uint8_t *cmd, cmd_result ret_type, uint16_t timeout) {
   uint8_t len = cmd[0];
   uint8_t chksum = checksum(cmd);
-  log_d("chksum is %x", chksum);
 
   if (chksum != cmd[len-1])
     cmd[len-1] = chksum;
   
+  log_d("send:");
+  for (uint8_t i = 0; i < len; i++) {
+    Serial.printf("%02X ", cmd[i]);
+  }
+  Serial.printf("\n");
   Serial2.write(cmd, len);
   if(!wait_command_ack()){
     delay(timeout);
@@ -121,3 +114,60 @@ cmd_result send_command (uint8_t *cmd, cmd_result ret_type, uint16_t timeout) {
 
   return C_OK;
 }
+
+/*
+ finish() != true の間歩行
+ a 片足が動くたびにfinish()が実行される。
+ @return cmd_result
+*/
+cmd_result walk(bool (*finish)(void)) {
+  
+  cmd_result r = send_motion(M_PRE_WALK);
+  log_d("motion result pre walk is %d", r);
+  if (r != C_OK) return r;
+
+  for (;;) {
+    r = send_motion(M_WALKL);
+    log_d("motion result walkl is %d", r);
+    if (r != C_OK) return r;
+    if (finish()) {
+      r = send_motion(M_POST_WALKL);
+      log_d("motion result post walkl is %d", r);
+      return r;
+    }
+
+    r = send_motion(M_WALKR);
+    log_d("motion result walkr is %d", r);
+    if (r != C_OK) return r;
+    if (finish()) {
+      r = send_motion(M_POST_WALKR);
+      log_d("motion result post walkr is %d", r);
+      return r;
+    }
+  }
+}
+
+cmd_result drive_joint(joints joint, uint8_t speed, uint16_t position) {
+  //               size  cmd   which servo to drive     
+  //               |     |     |                             speed (small => fast)
+  //               |     |     |                             |     position in [0x0000 0xFFFF]
+  //               V     v     v                             v     L     H     chksum
+  uint8_t cmd[] = {0x0B, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+  cmd[2+(joint-1)/8] += (1<< (joint-1)%8);
+  cmd[7] = speed;
+  cmd[8] = position & 0xFF;
+  cmd[9] = (position >> 8)& 0xFF;
+  return send_command(cmd, C_MULTI_SERVO_FAILED, 5000);
+}
+/*
+              1 頭
+  3:左肩ピッチ (F13000 - N7500 -  B2000)         4:右肩ピッチ (F2000 - N7500 -  B13000)
+  5:左肩ロール (D7500 - U13000)                  6:右肩ロール (D7500 - U2000)
+  9:左肘      (F4000 - N7500 -  B8300)          10:右 肘    (F11000 - N7500 -  B6600)
+
+  13:左腿ロール (D7500 - U8000)                 14:右腿ロール (D7500 - U6800)
+  15:左腿ピッチ (F11000 - N7500 - B4000)        16:右腿ピッチ (F4200 - N7500 - B11000)
+  17:左膝ピッチ (F6000 - N7500 - B11500)        18:右膝ピッチ (F9000 - N7500 - B3400)
+19:左足首ピッチ (F5000 - N7500 - B11000)        20:右足首ピッチ (F10000 - N7500 - B4000)
+21:左足首ロール (D10000 - N7500 - U7000)        22:右足首ロール (D5000 - N7500 - U8000)
+*///
