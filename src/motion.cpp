@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "config.h"
 #include "motion.h"
 #include <M5Stack.h>
 #include <Arduino.h>
