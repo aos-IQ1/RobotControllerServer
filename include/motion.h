@@ -31,6 +31,8 @@ typedef enum {
   M_UTUBUSE       = 0x7380, // M014  うつ伏せ
   M_AOMUKE        = 0x7B80, // M015  仰向け
   M_WAVE_HAND     = 0x8380, // M016  手を振る
+  M_KUSSHIN       = 0x8B80, // M017  屈伸
+  M_UDETATE       = 0x9380, // M018  腕立て伏せ
 } motions;
 
 typedef enum {
