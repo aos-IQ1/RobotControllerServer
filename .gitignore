@@ -4,3 +4,4 @@
 
 include/password.h
 include/config.h
+src/image_data.cpp
