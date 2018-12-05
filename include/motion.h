@@ -30,7 +30,7 @@ typedef enum {
   J_SHOULDER_L_ROLL     =  5,
   J_SHOULDER_R_ROLL     =  6,
   J_ELBOW_L             =  9,
-  J_ELBOW_L             = 10,
+  J_ELBOW_R             = 10,
 
   J_THIGH_L_ROLL        = 13,  
   J_THIGH_R_ROLL        = 14,  
