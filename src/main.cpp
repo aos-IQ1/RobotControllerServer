@@ -20,6 +20,9 @@ SemaphoreHandle_t switch_image_sem;
 
 void printWifiStatus();
 void connect_WiFi();
+void exec_command(char);
+void exec_motion_task(char);
+void exec_switch_image_task(char);
 void task_motion(void*);
 void task_switch_image(void*);
 
@@ -69,24 +72,7 @@ void loop(){
     char in;
     UDP.read(&in, 1);
     Serial.printf("%c\n", in);
-    motions motion;
-    images image;
-    switch (in) {
-      case 'A':
-        image = I_SAMPLE1;
-        xTaskCreate(task_switch_image, "image_switch_motion", 4096, (void*)(&image), 1, NULL);
-        break;
-      case 'B':
-        motion = M_OJIGI;
-        xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
-        break;
-      case 'C':
-        image = I_SAMPLE2;
-        xTaskCreate(task_switch_image, "image_switch_motion", 4096, (void*)(&image), 1, NULL);
-        break;
-      default :
-        break;
-    }
+    exec_command(in);
     UDP.flush();
   }
   delay(200);
@@ -122,6 +108,41 @@ void connect_WiFi(){
         log_d("WiFi connecting...");
     }
     log_d("WiFi Connected!");
+}
+
+void exec_command(char input) {
+  if ('0' <= input && input <= '9') {
+    exec_motion_task(input);
+  }else if ('A' <= input && input <= 'Z'){
+    exec_switch_image_task(input);
+  }
+}
+
+void exec_motion_task(char input) {
+  motions motion;
+  switch (input) {
+      case '0': // bow
+        motion = M_OJIGI;
+        break;
+      default :
+        return;
+  }
+  xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
+}
+
+void exec_switch_image_task(char input) {
+  images image;
+  switch (input) {
+      case 'A':
+        image = I_SAMPLE1;
+        break;
+      case 'B':
+        image = I_SAMPLE2;
+        break;
+      default :
+        return;
+  }
+  xTaskCreate(task_switch_image, "image_switch_motion", 4096, (void*)(&image), 1, NULL);
 }
 
 // function for task to send command
