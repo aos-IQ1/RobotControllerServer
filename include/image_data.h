@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// jpg data
+// jpg data(320 * 240)
 extern uint8_t sample1_jpg[];
 extern uint8_t sample2_jpg[];
 

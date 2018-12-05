@@ -15,8 +15,6 @@ int status = WL_IDLE_STATUS;
 int udp_port = 3333;
 WiFiUDP UDP;
 
-char WiFibuff[128];
-
 SemaphoreHandle_t motion_sem;
 SemaphoreHandle_t switch_image_sem;
 
@@ -43,17 +41,16 @@ void setup() {
   }
   xSemaphoreGive(switch_image_sem); // initalize to 'empty'
 
-  render_image(I_SAMPLE1);
-
   M5.Lcd.println("Start RobotControllerServer POI");
   log_d("Start RobotControllerServer POI");
 
+  delay(200);
   // attempt to connect to Wifi network:
-  //connect_WiFi();
+  connect_WiFi();
 
-  //UDP.begin(udp_port);   
+  UDP.begin(udp_port);
   // you're connected now, so print out the status:
-  //printWifiStatus();
+  printWifiStatus();
 }
 
 bool sample_finish() {
@@ -68,73 +65,51 @@ bool sample_finish() {
 }
 
 void loop(){ 
-  /*
   if(UDP.parsePacket() > 0) {
-    UDP.read(WiFibuff, 128);
-    Serial.print(WiFibuff);
+    char in;
+    UDP.read(&in, 1);
+    Serial.printf("%c\n", in);
+    motions motion;
+    images image;
+    switch (in) {
+      case 'A':
+        image = I_SAMPLE1;
+        xTaskCreate(task_switch_image, "image_switch_motion", 4096, (void*)(&image), 1, NULL);
+        break;
+      case 'B':
+        motion = M_OJIGI;
+        xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
+        break;
+      case 'C':
+        image = I_SAMPLE2;
+        xTaskCreate(task_switch_image, "image_switch_motion", 4096, (void*)(&image), 1, NULL);
+        break;
+      default :
+        break;
+    }
     UDP.flush();
-  }else{
-    M5.Lcd.println("NO UDP");
   }
-  */
-
-  M5.Lcd.println("Loop");
-  cmd_result r;
-
-if (Serial.available()) {
-    delay(10);
-    uint8_t len = Serial.available();
-    char line[len];
-    for (uint8_t i = 0; i < len; i++) line[i] = Serial.read();
-    uint8_t joint, speed;
-    uint16_t vol;
-    sscanf(line, "%d:%d:%d", &joint, &speed, &vol);
-    //uint16_t vol = analogRead(36)*0xFFFF/4095;
-    log_d("vol is %d", vol);
-    r = drive_joint((joints)joint, speed, vol);
-    log_d("drive joint%d result is %d", joint, r);
-  } else {
-
-    r = send_motion(M_OJIGI);
-    log_d("motion result ojigi is %d", r);
-    
-    r = walk(sample_finish);
-    log_d("walk result is %d", r);
-
-    
-    r = drive_joint(J_SHOULDER_L_ROLL, 5, 10000);
-    log_d("drive joint result is %d", r);
-    r = drive_joint(J_SHOULDER_L_PITCH, 5, 3000);
-    log_d("drive joint result is %d", r);
-    delay(500);
-    r = drive_joint(J_SHOULDER_L_ROLL, 5, 7500);
-    log_d("drive joint result is %d", r);
-    r = drive_joint(J_SHOULDER_L_PITCH, 5, 7500);
-    log_d("drive joint result is %d", r);
-
-    delay(3000);
-  }
-
+  delay(200);
 }
 
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
+  M5.Lcd.print("SSID: ");
+  M5.Lcd.println(WiFi.SSID());
 
   // print your WiFi shield's IP address:
   IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
+  M5.Lcd.print("IP Address: ");
+  M5.Lcd.println(ip);
 
   // print the received signal strength:
   long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
+  M5.Lcd.print("signal strength (RSSI):");
+  M5.Lcd.print(rssi);
+  M5.Lcd.println(" dBm");
 
-  M5.Lcd.printf("Connected");
+  M5.Lcd.println("Connected");
 }
 
 // WiFiに接続
@@ -144,9 +119,9 @@ void connect_WiFi(){
 
     while(WiFi.status() != WL_CONNECTED){
         delay(1000);
-        M5.Lcd.println("WiFi connecting...");
+        log_d("WiFi connecting...");
     }
-    M5.Lcd.println("WiFi Connected!");
+    log_d("WiFi Connected!");
 }
 
 // function for task to send command
@@ -158,9 +133,11 @@ void task_motion(void *pvParameters) {
   } else {
     log_d("request for motion is accepted : %d", motion);
     
-    // cmd_result r = send_motion(motion);
+    cmd_result r = send_motion(motion);
+    /*
     delay(10000); 
     cmd_result r = C_OK;
+    */
     log_d("result is %d", r);
     xSemaphoreGive(motion_sem);
   }
