@@ -7,17 +7,27 @@
 #include <Arduino.h>
 
 void render_image(images image) {
-    uint8_t* data = sample1_jpg;
-    size_t len = sample1_jpg_len;
+    uint8_t* data = icon_jpg;
+    size_t len = icon_jpg_len;
     switch (image) {
-        case I_SAMPLE1 :
-            data = sample1_jpg;
-            len = sample1_jpg_len;
+        case I_ICON :
+            data = icon_jpg;
+            len = icon_jpg_len;
             break;
-        case I_SAMPLE2 :
-            data = sample2_jpg;
-            len = sample2_jpg_len;
+        case I_WEB :
+            data = web_jpg;
+            len = web_jpg_len;
             break;
+        case I_CYBER :
+            data = cyber_jpg;
+            len = cyber_jpg_len;
+            break;
+        case I_SUITS :
+            data = suits_jpg;
+            len = suits_jpg_len;
+            break;
+        default :
+            return;
     }
     M5.Lcd.drawJpg(data, len);
 }

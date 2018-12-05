@@ -15,15 +15,39 @@ int status = WL_IDLE_STATUS;
 int udp_port = 3333;
 WiFiUDP UDP;
 
+motions motion_list[14] = {
+  M_OJIGI,
+  M_HOME_POSITION,
+  M_PRE_WALK, // dummy for walk command
+  M_TO_LEFT,
+  M_TO_RIGHT,
+  M_TURN_LEFT,
+  M_TURN_RIGHT,
+  M_GET_UP_U,
+  M_GET_UP_A,
+  M_PUNCHL,
+  M_PUNCHR,
+  M_UTUBUSE,
+  M_AOMUKE,
+  M_WAVE_HAND
+};
+
+images image_list[4] = {
+  I_ICON,
+  I_WEB,
+  I_CYBER,
+  I_SUITS
+};
+
 SemaphoreHandle_t motion_sem;
 SemaphoreHandle_t switch_image_sem;
 
 void printWifiStatus();
 void connect_WiFi();
 void exec_command(char);
-void exec_motion_task(char);
-void exec_switch_image_task(char);
 void task_motion(void*);
+void task_walk(void*);
+bool is_waik_finished();
 void task_switch_image(void*);
 
 void setup() {
@@ -54,17 +78,9 @@ void setup() {
   UDP.begin(udp_port);
   // you're connected now, so print out the status:
   printWifiStatus();
-}
 
-bool sample_finish() {
-  static uint8_t step = 0;
-  step++;
-  if (step == 2) {
-    step = 0;
-    return true;
-  } else {
-    return false;
-  }
+  delay(5000);
+  render_image(I_ICON);
 }
 
 void loop(){ 
@@ -77,7 +93,6 @@ void loop(){
   }
   delay(200);
 }
-
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
@@ -110,69 +125,82 @@ void connect_WiFi(){
     log_d("WiFi Connected!");
 }
 
+// execute command according to input
 void exec_command(char input) {
-  if ('0' <= input && input <= '9') {
-    exec_motion_task(input);
-  }else if ('A' <= input && input <= 'Z'){
-    exec_switch_image_task(input);
+  static motions motion;
+  static images image;
+  if ('a' <= input && input <= ('a' + 13)) {
+    if(input == 'c') { 
+      // walking command
+      xTaskCreate(task_walk, "task_walk", 4096, NULL, 1, NULL);
+    } else {
+      motion = motion_list[input - 'a'];
+      xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
+    }
+  }else if ('A' <= input && input <= 'D'){
+    image = image_list[input - 'A'];
+    xTaskCreate(task_switch_image, "task_switch_image", 4096, (void*)(&image), 1, NULL);
   }
-}
-
-void exec_motion_task(char input) {
-  motions motion;
-  switch (input) {
-      case '0': // bow
-        motion = M_OJIGI;
-        break;
-      default :
-        return;
-  }
-  xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
-}
-
-void exec_switch_image_task(char input) {
-  images image;
-  switch (input) {
-      case 'A':
-        image = I_SAMPLE1;
-        break;
-      case 'B':
-        image = I_SAMPLE2;
-        break;
-      default :
-        return;
-  }
-  xTaskCreate(task_switch_image, "image_switch_motion", 4096, (void*)(&image), 1, NULL);
 }
 
 // function for task to send command
+// walking command is not included
 void task_motion(void *pvParameters) {
   motions motion = *(motions*) pvParameters;
   if(xSemaphoreTake(motion_sem, 0) != pdPASS) {
     // other task is running
-    log_d("request for motion is blocked : %d", motion);
+    log_d("request for motion is blocked : %x", motion);
   } else {
-    log_d("request for motion is accepted : %d", motion);
-    
+    log_d("request for motion is accepted : %x", motion);
     cmd_result r = send_motion(motion);
     /*
     delay(10000); 
     cmd_result r = C_OK;
     */
-    log_d("result is %d", r);
+    log_d("result is %x", r);
     xSemaphoreGive(motion_sem);
   }
   vTaskDelete(NULL);
 }
 
-// task function for task to switch facial image
+// function for task to send walk command
+void task_walk(void *pvParameters) {
+   if(xSemaphoreTake(motion_sem, 0) != pdPASS) {
+    // other task is running
+    log_d("request for walking is blocked");
+  } else {
+    log_d("request for walking is accepted");
+    cmd_result r = walk(is_waik_finished);
+    /*
+    delay(10000); 
+    cmd_result r = C_OK;
+    */
+    log_d("result is %x", r);
+    xSemaphoreGive(motion_sem);
+  }
+  vTaskDelete(NULL); 
+}
+
+// predicate for finshing walking 
+bool is_waik_finished() {
+  static uint8_t step = 0;
+  step++;
+  if (step == 2) {
+    step = 0;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// function for task to switch facial image
 void task_switch_image(void *pvParameters) {
   images image = *(images*) pvParameters;
   if(xSemaphoreTake(switch_image_sem, 0) != pdPASS) {
     // other task is running
-    log_d("request for switch image is blocked : %d", image);
+    log_d("request for switch image is blocked : %x", image);
   } else {
-    log_d("request for switch image is accepted : %d", image);
+    log_d("request for switch image is accepted : %x", image);
     render_image(image);
     xSemaphoreGive(switch_image_sem);
   }

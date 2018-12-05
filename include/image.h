@@ -2,8 +2,10 @@
 #define __IMAGE_H__
 
 typedef enum { 
-  I_SAMPLE1,
-  I_SAMPLE2
+  I_ICON,
+  I_WEB,
+  I_CYBER,
+  I_SUITS
 } images;
 
 void render_image(images);
