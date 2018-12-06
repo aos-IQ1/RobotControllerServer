@@ -126,13 +126,19 @@ void connect_WiFi(){
 }
 
 // execute command according to input
+bool walk_finished = true;
 void exec_command(char input) {
   static motions motion;
   static images image;
   if ('a' <= input && input <= ('a' + 13)) {
     if(input == 'c') { 
       // walking command
-      xTaskCreate(task_walk, "task_walk", 4096, NULL, 1, NULL);
+      if (walk_finished) {
+        walk_finished = false;
+        xTaskCreate(task_walk, "task_walk", 4096, NULL, 1, NULL);
+      } else {
+        walk_finished = true;
+      }
     } else {
       motion = motion_list[input - 'a'];
       xTaskCreate(task_motion, "task_motion", 4096, (void*)(&motion), 1, NULL);
@@ -171,10 +177,7 @@ void task_walk(void *pvParameters) {
   } else {
     log_d("request for walking is accepted");
     cmd_result r = walk(is_waik_finished);
-    /*
-    delay(10000); 
-    cmd_result r = C_OK;
-    */
+
     log_d("result is %x", r);
     xSemaphoreGive(motion_sem);
   }
@@ -183,14 +186,7 @@ void task_walk(void *pvParameters) {
 
 // predicate for finshing walking 
 bool is_waik_finished() {
-  static uint8_t step = 0;
-  step++;
-  if (step == 2) {
-    step = 0;
-    return true;
-  } else {
-    return false;
-  }
+  return walk_finished;
 }
 
 // function for task to switch facial image
