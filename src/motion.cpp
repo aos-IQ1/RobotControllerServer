@@ -67,7 +67,7 @@ cmd_result send_motion(motions motion) {
   @return 返り値が成功ならばtrue,失敗ならばfalse
 */
 bool wait_command_ack(){
-  log_d("Serial2 avail:%d", Serial2.available());
+  //log_d("Serial2 avail:%d", Serial2.available());
   while(Serial2.available() == 0){}
   log_d("received data:%d", Serial2.available());
 
