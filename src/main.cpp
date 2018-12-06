@@ -15,21 +15,27 @@ int status = WL_IDLE_STATUS;
 int udp_port = 3333;
 WiFiUDP UDP;
 
-motions motion_list[14] = {
+#define NUM_MOT 16
+motions motion_list[NUM_MOT] = {
   M_OJIGI,
   M_HOME_POSITION,
   M_PRE_WALK, // dummy for walk command
   M_TO_LEFT,
   M_TO_RIGHT,
+
   M_TURN_LEFT,
   M_TURN_RIGHT,
   M_GET_UP_U,
   M_GET_UP_A,
   M_PUNCHL,
+
   M_PUNCHR,
   M_UTUBUSE,
   M_AOMUKE,
-  M_WAVE_HAND
+  M_WAVE_HAND,
+  M_KUSSHIN,
+
+  M_UDETATE,
 };
 
 images image_list[4] = {
@@ -130,7 +136,7 @@ bool walk_finished = true;
 void exec_command(char input) {
   static motions motion;
   static images image;
-  if ('a' <= input && input <= ('a' + 13)) {
+  if ('a' <= input && input <= ('a' + NUM_MOT-1)) {
     if(input == 'c') { 
       // walking command
       if (walk_finished) {
