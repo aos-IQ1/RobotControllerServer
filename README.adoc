@@ -1,0 +1,20 @@
+= Motion test
+
+== 概要
+ロボット側プログラム
+
+== `config.h`
+
+.config.h
+[source, c]
+----
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
+
+#define CORE_DEBUG_LEVEL ARDUHAL_LOG_LEVEL_DEBUG
+
+#define AP_SSID  "lab";
+#define AP_PASSWORD "lab";
+
+#endif
+----
